@@ -258,6 +258,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         }
 
         /// <summary>
+        ///     Pre-processes query model in case of queries with group by result operator.
+        /// </summary>
+        /// <param name="queryModel">Query model to process. </param>
+        protected virtual void PreProcessGroupBy([NotNull] QueryModel queryModel)
+        {
+        }
+
+        /// <summary>
         ///     Applies optimizations to the query.
         /// </summary>
         /// <param name="queryModel"> The query. </param>
@@ -278,6 +286,8 @@ namespace Microsoft.EntityFrameworkCore.Query
             _queryOptimizer.Optimize(QueryCompilationContext, queryModel);
 
             new NondeterministicResultCheckingVisitor(QueryCompilationContext.Logger).VisitQueryModel(queryModel);
+
+            PreProcessGroupBy(queryModel);
 
             // Rewrite includes/navigations
 
