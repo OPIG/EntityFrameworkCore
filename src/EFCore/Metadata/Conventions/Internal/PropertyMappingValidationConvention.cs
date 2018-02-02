@@ -79,28 +79,22 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Conventions.Internal
                             var targetSequenceType = propertyType.TryGetSequenceType();
 
                             if (modelBuilder.IsIgnored(propertyType.DisplayName(), ConfigurationSource.Convention)
-                                || targetSequenceType != null
-                                && modelBuilder.IsIgnored(targetSequenceType.DisplayName(), ConfigurationSource.Convention))
+                                || (targetSequenceType != null
+                                && modelBuilder.IsIgnored(targetSequenceType.DisplayName(), ConfigurationSource.Convention)))
                             {
                                 continue;
                             }
 
                             var targetType = FindCandidateNavigationPropertyType(actualProperty);
 
-                            var targetEntityType
-                                = targetType == null
-                                    ? null
-                                    : modelBuilder.Metadata.FindEntityType(targetType);
-
-                            var isDependentEntityType
+                            var isTargetWeakOrOwned
                                 = targetType != null
-                                  && modelBuilder.Metadata.HasEntityTypeWithDefiningNavigation(targetType);
+                                  && (modelBuilder.Metadata.HasEntityTypeWithDefiningNavigation(targetType)
+                                      || modelBuilder.Metadata.ShouldBeOwnedType(targetType));
 
-                            if (targetType != null
-                                && (targetEntityType != null
-                                    || isDependentEntityType))
+                            if (targetType != null)
                             {
-                                if ((!isDependentEntityType
+                                if ((!isTargetWeakOrOwned
                                      || !targetType.GetTypeInfo().Equals(entityType.ClrType.GetTypeInfo()))
                                     && entityType.GetDerivedTypes().All(dt => dt.FindDeclaredNavigation(actualProperty.Name) == null)
                                     && !entityType.IsInDefinitionPath(targetType))
